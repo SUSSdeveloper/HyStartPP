@@ -10,7 +10,7 @@ This separation also makes it easier to eventually remove the HyStart implementa
 
 The implementation includes {LINEn} markers, where n is a three-digit number referencing the corresponding line in RFC 9406 [see here](./implementation/rfc9406.txt).
 
-To provide clarity, we included a [block diagram](theLink) that introduces the new procedures and code added to `tcp_cubic.c` and illustrates their interactions.
+To provide clarity, we included a [block diagram](./implementation/block_diagram.pdf) that introduces the new procedures and code added to `tcp_cubic.c` and illustrates their interactions.
 
 The [patch](./implementation/tcp_cubic.patch), and the modified `tcp_cubic.c` can be found in the `implementation`  directory within the project.
 
@@ -43,7 +43,7 @@ echo <port_number> > /sys/module/tcp_cubic/parameters/hystartpp_source_port
 
 This setting enables logging of information in the `/var/log/kern.log` file on Linux.
 
-The following log entry:
+Foe example, the following log entry:
 <pre>
 t 874877310 c 22 i 21 f 0 r 100949 a 1 d 18824 l 0
 </pre>
