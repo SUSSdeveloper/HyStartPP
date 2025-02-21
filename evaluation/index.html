@@ -60,7 +60,7 @@ Using netem, we configure the bottleneck bandwidth to 50 Mbps, the round-trip pr
 <br>
 We repeat the experiment four times:
 
-<h3>1) None of the mechanism is enabled:</h3>
+<h3>1) None of the mechanisms is enabled:</h3>
 In the first iteration, HyStart, HyStart++, and SUSS are all disabled. As shown in Figure 2(a), cwnd grows exponentially until packet loss occurs, leading to heavy buffer overflow. The receiver experiences a long delay in receiving new acknowledgments (see the cut in the green curve in Figure 2(a)). The 5MB data transfer takes 1.5 seconds, and for 20MB, 1105 packets are lost.
 
 <h3>2) HyStart Enabled</h3>
