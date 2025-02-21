@@ -8,7 +8,7 @@ While HyStart++ is designed to replace its predecessor HyStart, we have currentl
 To enhance clarity and maintainability, we have defined a distinct set of variables for HyStart++ rather than reusing existing HyStart variables. For instance, when tracking the minimum RTT in the current round, we opted not to reuse HyStart's `curr_rtt`. Instead, we introduced `hspp_current_round_minrtt`, which serves the same purpose but ensures better separation between HyStart and HyStart++ logic.
 This separation also makes it easier to eventually remove the HyStart implementation if needed.
 
-The implementation includes {LINEn} markers, where n is a three-digit number referencing the corresponding line in RFC 9406 [see here](./implementation/rfc9406.txt).
+The implementation includes `{LINEnnn}` markers, where `nnn` is a three-digit number referencing the corresponding line in RFC 9406 [see here](./implementation/rfc9406.txt).
 
 To provide clarity, we included a [block diagram](./implementation/block_diagram.pdf) that introduces the new procedures and code added to `tcp_cubic.c` and illustrates their interactions.
 
