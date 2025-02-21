@@ -61,17 +61,17 @@ Using netem, we configure the bottleneck bandwidth to 50 Mbps, the round-trip pr
 We repeat the experiment four times:
 
 <h3>1) None of the mechanism is enabled:</h3>
-In the first iteration, HyStart, HyStart++, and SUSS are all disabled. As shown in Figure 1(a), cwnd grows exponentially until packet loss occurs, leading to heavy buffer overflow. The receiver experiences a long delay in receiving new acknowledgments (see the cut in the green curve in Figure 1(a)). The 5MB data transfer takes 1.5 seconds, and for 20MB, 1105 packets are lost.
+In the first iteration, HyStart, HyStart++, and SUSS are all disabled. As shown in Figure 2(a), cwnd grows exponentially until packet loss occurs, leading to heavy buffer overflow. The receiver experiences a long delay in receiving new acknowledgments (see the cut in the green curve in Figure 2(a)). The 5MB data transfer takes 1.5 seconds, and for 20MB, 1105 packets are lost.
 
 <h3>2) HyStart Enabled</h3>
-In the second iteration, HyStart is enabled. As shown in Figure 1(b), cwnd growth shifts from exponential to linear once the bottleneck link is saturated. This delays and moderates buffer overflow, reducing packet loss to 40 packets for 20MB of data transfer. The 5MB transfer time improves to 1.29 seconds.
+In the second iteration, HyStart is enabled. As shown in Figure 2(b), cwnd growth shifts from exponential to linear once the bottleneck link is saturated. This delays and moderates buffer overflow, reducing packet loss to 40 packets for 20MB of data transfer. The 5MB transfer time improves to 1.29 seconds.
 
 <h3>3) HyStart++ Enabled</h3>
-In the third iteration, HyStart++ is enabled. As shown in Figure 1(c), the exponential growth is divided into two phases: SS (slow-start) and CSS (conservative slow-start), where cwnd growth slows down. However, the transition remains aggressive, causing significant packet loss. The 5MB transfer takes 1.5 seconds, and 704 packets are lost for 20MB.
+In the third iteration, HyStart++ is enabled. As shown in Figure 2(c), the exponential growth is divided into two phases: SS (slow-start) and CSS (conservative slow-start), where cwnd growth slows down. However, the transition occurs late and remains aggressive, causing significant packet loss. The 5MB transfer takes 1.5 seconds, and 704 packets are lost for 20MB.
 
 <h3>4) SUSS Enabled</h3>
-In the fourth iteration, SUSS is enabled. As shown in Figure 1(d), the accelerated exponential growth transitions to linear growth once the bottleneck link is saturated, delaying and moderating buffer overflow. This results in only 35 lost packets for 20MB of data transfer. The 5MB transfer time is the shortest at 1.11 seconds.
-
+In the fourth iteration, SUSS is enabled. As shown in Figure 2(d), the accelerated exponential growth transitions to linear growth once the bottleneck link is saturated, delaying and moderating buffer overflow. This results in only 35 lost packets for 20MB of data transfer. The 5MB transfer time is the shortest at 1.11 seconds.
+<br>
 <i>The network conditions in this configuration are stable, and repeated experiments produce consistent results.</i>
 
 </p>    
@@ -94,11 +94,11 @@ In this test the laptop receives data from the sender via a TCP flow. As shown i
 <br>
 Due to the inherent instability of Wi-Fi links, repeating the experiment does not produce highly consistent results. To provide better insights, we repeat each test 20 times per mechanism and aggregate the results to compare Flow Completion Time (FCT) and packet loss for different flow sizes. This allows us to analyze how these parameters vary among the evaluated mechanisms too.
 <br>
-As mentioned, when none of the mechanisms is enabled, cwnd overshoots the path capacity, causing significant packet loss (see the green curve in Figure 4(b)). This, in turn, increases FCT, particularly for small size flows (see the green curve in Figure 4(a)). In this configuration, while HyStart++ offers some improvement, SUSS and HyStart still achieve better performance.
+As mentioned, when none of the mechanisms is enabled, cwnd overshoots the path capacity, causing significant packet loss (see the green curve in Figure 4(b)). This, in turn, increases FCT, particularly for small size flows (see the green curve in Figure 4(a)). In this configuration, while HyStart++ offers some improvement, SUSS and HyStart still achieve better performance due to their lower packet loss rates.
 <br>
 	    <figure>
 		<iframe src="wifi_avg.png" width="720" height="273" style="border: none;"></iframe>
-	        <figcaption>Figure 4: Comparison of FCT and packet loss across HyStart, HyStart++, and SUSS.</figcaption>
+	        <figcaption>Figure 4: Comparison of FCT and packet loss across HyStart, HyStart++, and SUSS for different data transfer sizes.</figcaption>
 	    </figure>
 	</p>
 
