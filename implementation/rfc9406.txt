@@ -72,7 +72,7 @@ Table of Contents
 1.  Introduction
 
    [RFC5681] describes the slow start congestion control algorithm for
-   TCP.  {RFC9406_075} The slow start algorithm is used when the congestion window
+   TCP.  {RFC9406_L075} The slow start algorithm is used when the congestion window
    (cwnd) is less than the slow start threshold (ssthresh).  During slow
    start, in the absence of packet loss signals, TCP increases the cwnd
    exponentially to probe the network capacity.  This fast growth can
@@ -149,10 +149,10 @@ Table of Contents
    phase to determine whether the exit from slow start was premature.
    During CSS, the congestion window is grown exponentially in a fashion
    similar to regular slow start, but with a smaller exponential base,
-   resulting in less aggressive growth.  {RFC9406_152} If the RTT reduces during CSS,
+   resulting in less aggressive growth.  {RFC9406_L152} If the RTT reduces during CSS,
    it's concluded that the RTT spike was not related to congestion
    caused by the connection sending at a rate greater than the ideal
-   send rate, and the connection resumes slow start.  {RFC9406_155} If the RTT
+   send rate, and the connection resumes slow start.  {RFC9406_L155} If the RTT
    inflation persists throughout CSS, the connection enters congestion
    avoidance.
 
@@ -164,7 +164,7 @@ Table of Contents
    number of bytes, the HyStart++ algorithm limits the number of those
    bytes applied to increase the cwnd to L*SMSS bytes.
 
-   {RFC9406_167} lastRoundMinRTT and currentRoundMinRTT are initialized to infinity at
+   {RFC9406_L167} lastRoundMinRTT and currentRoundMinRTT are initialized to infinity at
    the initialization time.  currRTT is the RTT sampled from the latest
    incoming ACK and initialized to infinity.
 
@@ -183,9 +183,9 @@ Table of Contents
    CSS, initialize the variables used to compute the last round's and
    current round's minimum RTT:
 
-   {RFC9406_186} lastRoundMinRTT = currentRoundMinRTT
-   {RFC9406_187} currentRoundMinRTT = infinity
-   {RFC9406_188} rttSampleCount = 0
+   {RFC9406_L186} lastRoundMinRTT = currentRoundMinRTT
+   {RFC9406_L187} currentRoundMinRTT = infinity
+   {RFC9406_L188} rttSampleCount = 0
 
    For each arriving ACK in slow start, where N is the number of
    previously unacknowledged bytes acknowledged in the arriving ACK:
@@ -196,10 +196,10 @@ Table of Contents
 
    Keep track of the minimum observed RTT:
 
-     {RFC9406_199} currentRoundMinRTT = min(currentRoundMinRTT, currRTT)
-     {RFC9406_200} rttSampleCount += 1
+     {RFC9406_L199} currentRoundMinRTT = min(currentRoundMinRTT, currRTT)
+     {RFC9406_L200} rttSampleCount += 1
 
-   {RFC9406_202} For rounds where at least N_RTT_SAMPLE RTT samples have been obtained
+   {RFC9406_L202} For rounds where at least N_RTT_SAMPLE RTT samples have been obtained
    and currentRoundMinRTT and lastRoundMinRTT are valid, check to see if
    delay increase triggers slow start exit:
 
@@ -212,7 +212,7 @@ Table of Contents
        cssBaselineMinRtt = currentRoundMinRTT
        exit slow start and enter CSS
 
-   {RFC9406_215} For each arriving ACK in CSS, where N is the number of previously
+   {RFC9406_L215} For each arriving ACK in CSS, where N is the number of previously
    unacknowledged bytes acknowledged in the arriving ACK:
 
    Update the cwnd:
@@ -221,10 +221,10 @@ Table of Contents
 
    Keep track of the minimum observed RTT:
 
-   {RFC9406_224} currentRoundMinRTT = min(currentRoundMinRTT, currRTT)
-   {RFC9406_225} rttSampleCount += 1
+   {RFC9406_L224} currentRoundMinRTT = min(currentRoundMinRTT, currRTT)
+   {RFC9406_L225} rttSampleCount += 1
 
-   {RFC9406_227} For CSS rounds where at least N_RTT_SAMPLE RTT samples have been
+   {RFC9406_L227} For CSS rounds where at least N_RTT_SAMPLE RTT samples have been
    obtained, check to see if the current round's minRTT drops below
    baseline (cssBaselineMinRtt) indicating that slow start exit was
    spurious:
@@ -237,12 +237,12 @@ Table of Contents
    happens in the middle of a round, that partial round counts towards
    the limit.
 
-   {RFC9406_240} If CSS_ROUNDS rounds are complete, enter congestion avoidance by
+   {RFC9406_L240} If CSS_ROUNDS rounds are complete, enter congestion avoidance by
    setting the ssthresh to the current cwnd.
 
    ssthresh = cwnd
 
-   {RFC9406_245} If loss or Explicit Congestion Notification (ECN) marking is observed
+   {RFC9406_L245} If loss or Explicit Congestion Notification (ECN) marking is observed
    at any time during standard slow start or CSS, enter congestion
    avoidance by setting the ssthresh to the current cwnd.
 
@@ -250,7 +250,7 @@ Table of Contents
 
 4.3.  Tuning Constants and Other Considerations
 
-   {RFC9406_253} It is RECOMMENDED that a HyStart++ implementation use the following
+   {RFC9406_L253} It is RECOMMENDED that a HyStart++ implementation use the following
    constants:
 
    MIN_RTT_THRESH = 4 msec
