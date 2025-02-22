@@ -46,7 +46,7 @@
 #define HYSTART_DELAY_MAX	(16000U)	/* 16 ms */
 #define HYSTART_DELAY_THRESH(x)	clamp(x, HYSTART_DELAY_MIN, HYSTART_DELAY_MAX)
 
-/* {LINE253} */
+/* {RFC9406_253} */
 #define HSPP_MIN_RTT_THRESH	(4000U)		/*  4 ms	*/
 #define HSPP_MAX_RTT_THRESH	(16000U)	/* 16 ms	*/
 #define HSPP_CSS_MIN_RTT_DIV	3		/* RTT threshold is computed as RTT / (2^HSPP_CSS_MIN_RTT_DIV)			*/
@@ -186,9 +186,9 @@ static inline void hystartpp_reset(struct sock *sk)
 	struct tcp_sock *tp = tcp_sk(sk);
 	struct bictcp *ca = inet_csk_ca(sk);
 
-        ca->hspp_last_round_minrtt = ca->hspp_current_round_minrtt;	/* {LINE186} */
-        ca->hspp_current_round_minrtt = ~0U;				/* {LINE187} */
-	ca->hspp_rttsample_counter = 0;					/* {LINE188} */
+        ca->hspp_last_round_minrtt = ca->hspp_current_round_minrtt;	/* {RFC9406_186} */
+        ca->hspp_current_round_minrtt = ~0U;				/* {RFC9406_187} */
+	ca->hspp_rttsample_counter = 0;					/* {RFC9406_188} */
         ca->hspp_end_seq = tp->snd_nxt;
 }
 
@@ -203,8 +203,8 @@ __bpf_kfunc static void cubictcp_init(struct sock *sk)
 	if (hystartpp) {
 		ca->hspp_round_counter = 0;
 		ca->hspp_flag = HSPP_IN_SS;
-		ca->hspp_last_round_minrtt = ~0U;	/* {LINE167} */
-		ca->hspp_current_round_minrtt = ~0U;	/* {LINE167} */
+		ca->hspp_last_round_minrtt = ~0U;	/* {RFC9406_167} */
+		ca->hspp_current_round_minrtt = ~0U;	/* {RFC9406_167} */
 		hystartpp_reset(sk);
 		logprint(sk, "INIT", 1);
 		return;	/* In this implimentation HSPP overrides HyStart */
@@ -404,7 +404,7 @@ static void hystartpp_adjust_cwnd(struct sock *sk, u32 acked) {
 	struct bictcp *ca = inet_csk_ca(sk);
 	u32 rtt_thresh;
 
-	/* Check if it is time to enter CSS. {LINE202} */
+	/* Check if it is time to enter CSS. {RFC9406_202} */
 	if ((ca->hspp_flag == HSPP_IN_SS) &&
 	    (ca->hspp_rttsample_counter >= HSPP_N_RTT_SAMPLE) &&
 	    (ca->hspp_current_round_minrtt != ~0U) &&
@@ -423,11 +423,11 @@ static void hystartpp_adjust_cwnd(struct sock *sk, u32 acked) {
 	if (ca->hspp_flag == HSPP_IN_SS) {
 		tcp_slow_start(tp, acked);
 	} else if (ca->hspp_flag == HSPP_IN_CSS) {			// We may not need the if statement
-		tcp_cong_avoid_ai(tp, HSPP_CSS_GROWTH_DIV, acked);	/* {LINE215} */
+		tcp_cong_avoid_ai(tp, HSPP_CSS_GROWTH_DIV, acked);	/* {RFC9406_215} */
 	}
 
 	if (tcp_snd_cwnd(tp) >= tp->snd_ssthresh) {
-		/* Enter CA {LINE075} */
+		/* Enter CA {RFC9406_075} */
 		logprint(sk, "Enter CA1", 1);
 		ca->hspp_flag = HSPP_DEACTIVE;
 	}
@@ -445,7 +445,7 @@ __bpf_kfunc static void cubictcp_cong_avoid(struct sock *sk, u32 ack, u32 acked)
 	logprint(sk, "New ACK", 0);	// Used for monitoring
 
 	if (tcp_in_slow_start(tp)) {
-		if (hystartpp && (ca->hspp_flag != HSPP_DEACTIVE)) {	/* {LINE075} */
+		if (hystartpp && (ca->hspp_flag != HSPP_DEACTIVE)) {	/* {RFC9406_075} */
 			hystartpp_adjust_cwnd(sk, acked);
 			return;	/* In this implimentation HSPP overrides HyStart */
 		}
@@ -487,7 +487,7 @@ __bpf_kfunc static void cubictcp_state(struct sock *sk, u8 new_state)
 		 new_state, bictcp_clock_us(sk), tcp_sk(sk)->snd_cwnd, tcp_packets_in_flight(tcp_sk(sk)), ca->hspp_flag, tcp_sk(sk)->snd_ssthresh);
 
 	if (hystartpp && (ca->hspp_flag != HSPP_DEACTIVE) &&
-	    ((new_state == TCP_CA_CWR) || (new_state == TCP_CA_Recovery) || (new_state == TCP_CA_Loss))) {	/* {LINE245} */
+	    ((new_state == TCP_CA_CWR) || (new_state == TCP_CA_Recovery) || (new_state == TCP_CA_Loss))) {	/* {RFC9406_245} */
 		logprint(sk, "State Changed", 1);
 		ca->hspp_flag = HSPP_DEACTIVE;
 		return;	/* In this implimentation HSPP overrides HyStart */
@@ -530,7 +530,7 @@ static void hystartpp_new_round(struct sock *sk)
 
 	if ((ca->hspp_flag == HSPP_IN_CSS) &&
 	    ((ca->hspp_round_counter - ca->hspp_entered_css_at_round) >= HSPP_CSS_ROUNDS)) {
-		tp->snd_ssthresh = tcp_snd_cwnd(tp);	/* Enter CA {LINE155} {LINE240} */
+		tp->snd_ssthresh = tcp_snd_cwnd(tp);	/* Enter CA {RFC9406_155} {RFC9406_240} */
 		ca->hspp_flag = HSPP_DEACTIVE;
 		logprint(sk, "Enter CA2", 1);
 	}
@@ -547,15 +547,15 @@ static void hystartpp_adjust_params(struct sock *sk, u32 rtt)
 		hystartpp_new_round(sk);
 
 	if (rtt < ca->hspp_current_round_minrtt) {
-		ca->hspp_current_round_minrtt = rtt;	/* {LINE199} {LINE224}*/
+		ca->hspp_current_round_minrtt = rtt;	/* {RFC9406_199} {RFC9406_224}*/
 	}
 
         if (ca->hspp_rttsample_counter < HSPP_N_RTT_SAMPLE) {
-		ca->hspp_rttsample_counter++;		/* {LINE200} {LINE225} */
+		ca->hspp_rttsample_counter++;		/* {RFC9406_200} {RFC9406_225} */
 	} else {
 		if ((ca->hspp_flag == HSPP_IN_CSS) &&
 		    (ca->hspp_current_round_minrtt < ca->hspp_css_baseline_minrtt)) {
-			/* We were in CSS and the RTT is now less, we entered CSS erroneously. Enter SS. {LINE152} {LINE227} */
+			/* We were in CSS and the RTT is now less, we entered CSS erroneously. Enter SS. {RFC9406_152} {RFC9406_227} */
 			logprint(sk, "Enter SS. We entered CSS erroneously", 1);
 			ca->hspp_css_baseline_minrtt = ~0U;	/* In this implementation, the HSPP_IN_CSS flag indicates that we are in CSS, so this assignment is unnecessary. */
 			ca->hspp_flag = HSPP_IN_SS;
@@ -656,7 +656,7 @@ __bpf_kfunc static void cubictcp_acked(struct sock *sk, const struct ack_sample 
 	if (!ca->found && tcp_in_slow_start(tp) && hystart && !hystartpp)	/* In this implimentation HSPP overrides HyStart */
 		hystart_update(sk, delay);
 
-	if (tcp_in_slow_start(tp) && /* {LINE075} */
+	if (tcp_in_slow_start(tp) && /* {RFC9406_075} */
 	    hystartpp && (ca->hspp_flag != HSPP_DEACTIVE)) {
 		hystartpp_adjust_params(sk, delay);
 	}
