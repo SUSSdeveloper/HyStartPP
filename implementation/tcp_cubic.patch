@@ -1,5 +1,5 @@
 --- original_tcp_cubic.c	2025-02-10 12:17:14.000000000 +1300
-+++ modified_tcp_cubic.c	2025-02-24 11:06:24.000000000 +1300
++++ modified_tcp_cubic.c	2025-02-24 12:21:59.000000000 +1300
 @@ -46,6 +46,18 @@
  #define HYSTART_DELAY_MAX	(16000U)	/* 16 ms */
  #define HYSTART_DELAY_THRESH(x)	clamp(x, HYSTART_DELAY_MIN, HYSTART_DELAY_MAX)
@@ -34,7 +34,7 @@
  /* BIC TCP Parameters */
  struct bictcp {
  	u32	cnt;		/* increase cwnd by 1 after ACKs */
-@@ -102,8 +122,44 @@
+@@ -102,6 +122,23 @@
  	u32	end_seq;	/* end_seq of the round */
  	u32	last_ack;	/* last time when the ACK spacing is close */
  	u32	curr_rtt;	/* the minimum rtt of current round */
@@ -57,7 +57,13 @@
 +	u32     snd_isn; // Initial sequence number (is used to calc delivered)
  };
  
-+static void logprint(struct sock *sk, char *msg, int extra)	// This function is used for monitoring and will not be included in the final implementation.
+ static inline void bictcp_reset(struct bictcp *ca)
+@@ -115,6 +152,26 @@
+ 	return tcp_sk(sk)->tcp_mstamp;
+ }
+ 
++// This function is used for monitoring and will not be included in the final implementation.
++static void logprint(struct sock *sk, char *msg, int extra)
 +{
 +	if (ntohs(inet_sk(sk)->inet_sport) != hystartpp_source_port)
 +		return;
@@ -76,10 +82,10 @@
 +	}
 +}
 +
- static inline void bictcp_reset(struct bictcp *ca)
+ static inline void bictcp_hystart_reset(struct sock *sk)
  {
- 	memset(ca, 0, offsetof(struct bictcp, unused));
-@@ -126,12 +182,35 @@
+ 	struct tcp_sock *tp = tcp_sk(sk);
+@@ -126,12 +183,35 @@
  	ca->sample_cnt = 0;
  }
  
@@ -115,7 +121,7 @@
  	if (hystart)
  		bictcp_hystart_reset(sk);
  
-@@ -321,6 +400,40 @@
+@@ -321,6 +401,40 @@
  	ca->cnt = max(ca->cnt, 2U);
  }
  
@@ -156,7 +162,7 @@
  __bpf_kfunc static void cubictcp_cong_avoid(struct sock *sk, u32 ack, u32 acked)
  {
  	struct tcp_sock *tp = tcp_sk(sk);
-@@ -329,7 +442,15 @@
+@@ -329,7 +443,15 @@
  	if (!tcp_is_cwnd_limited(sk))
  		return;
  
@@ -172,7 +178,7 @@
  		acked = tcp_slow_start(tp, acked);
  		if (!acked)
  			return;
-@@ -343,6 +464,9 @@
+@@ -343,6 +465,9 @@
  	const struct tcp_sock *tp = tcp_sk(sk);
  	struct bictcp *ca = inet_csk_ca(sk);
  
@@ -182,7 +188,7 @@
  	ca->epoch_start = 0;	/* end of epoch */
  
  	/* Wmax and fast convergence */
-@@ -357,6 +481,19 @@
+@@ -357,6 +482,19 @@
  
  __bpf_kfunc static void cubictcp_state(struct sock *sk, u8 new_state)
  {
@@ -202,7 +208,7 @@
  	if (new_state == TCP_CA_Loss) {
  		bictcp_reset(inet_csk_ca(sk));
  		bictcp_hystart_reset(sk);
-@@ -383,6 +520,50 @@
+@@ -383,6 +521,50 @@
  		     div64_ul((u64)sk->sk_gso_max_size * 4 * USEC_PER_SEC, rate));
  }
  
@@ -253,7 +259,7 @@
  static void hystart_update(struct sock *sk, u32 delay)
  {
  	struct tcp_sock *tp = tcp_sk(sk);
-@@ -415,6 +596,7 @@
+@@ -415,6 +597,7 @@
  
  			if ((s32)(now - ca->round_start) > threshold) {
  				ca->found = 1;
@@ -261,7 +267,7 @@
  				pr_debug("hystart_ack_train (%u > %u) delay_min %u (+ ack_delay %u) cwnd %u\n",
  					 now - ca->round_start, threshold,
  					 ca->delay_min, hystart_ack_delay(sk), tcp_snd_cwnd(tp));
-@@ -438,6 +620,7 @@
+@@ -438,6 +621,7 @@
  			if (ca->curr_rtt > ca->delay_min +
  			    HYSTART_DELAY_THRESH(ca->delay_min >> 3)) {
  				ca->found = 1;
@@ -269,7 +275,7 @@
  				NET_INC_STATS(sock_net(sk),
  					      LINUX_MIB_TCPHYSTARTDELAYDETECT);
  				NET_ADD_STATS(sock_net(sk),
-@@ -471,6 +654,13 @@
+@@ -471,6 +655,13 @@
  	if (ca->delay_min == 0 || ca->delay_min > delay)
  		ca->delay_min = delay;
  

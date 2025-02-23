@@ -141,7 +141,19 @@ struct bictcp {
 	u32     snd_isn; // Initial sequence number (is used to calc delivered)
 };
 
-static void logprint(struct sock *sk, char *msg, int extra)	// This function is used for monitoring and will not be included in the final implementation.
+static inline void bictcp_reset(struct bictcp *ca)
+{
+	memset(ca, 0, offsetof(struct bictcp, unused));
+	ca->found = 0;
+}
+
+static inline u32 bictcp_clock_us(const struct sock *sk)
+{
+	return tcp_sk(sk)->tcp_mstamp;
+}
+
+// This function is used for monitoring and will not be included in the final implementation.
+static void logprint(struct sock *sk, char *msg, int extra)
 {
 	if (ntohs(inet_sk(sk)->inet_sport) != hystartpp_source_port)
 		return;
@@ -158,17 +170,6 @@ static void logprint(struct sock *sk, char *msg, int extra)	// This function is 
 		  msg, bictcp_clock_us(sk), tp->snd_cwnd, tcp_packets_in_flight(tp), ca->hspp_flag, tp->snd_ssthresh, ca->hspp_rttsample_counter, ca->hspp_last_round_minrtt,
 		  ca->hspp_current_round_minrtt, ca->hspp_round_counter, ca->hspp_entered_css_at_round, ca->hspp_css_baseline_minrtt, ca->hspp_recent_rtt);
 	}
-}
-
-static inline void bictcp_reset(struct bictcp *ca)
-{
-	memset(ca, 0, offsetof(struct bictcp, unused));
-	ca->found = 0;
-}
-
-static inline u32 bictcp_clock_us(const struct sock *sk)
-{
-	return tcp_sk(sk)->tcp_mstamp;
 }
 
 static inline void bictcp_hystart_reset(struct sock *sk)
