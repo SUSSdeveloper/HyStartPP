@@ -5,10 +5,9 @@ This project implements HyStart++ (as described in [RFC 9406](https://datatracke
 While HyStart++ is designed to replace its predecessor HyStart, we have currently retained both algorithms, allowing users to choose between them.
 
 ## Implementation Details
-To enhance clarity and maintainability, we have defined a distinct set of variables for HyStart++ rather than reusing existing HyStart variables. For instance, when tracking the minimum RTT in the current round, we opted not to reuse HyStart's `curr_rtt`. Instead, we introduced `hspp_current_round_minrtt`, which serves the same purpose but ensures better separation between HyStart and HyStart++ logic.
-This separation also makes it easier to eventually remove the HyStart implementation if needed.
+To ensure clarity, maintainability, and ease of review, all modifications in `tcp_cubic.c` have been made without altering or removing any existing statements. Instead, the necessary changes have been introduced by adding new lines of code. This approach preserves the original structure and logic of the current version while making it easier to track modifications and maintain compatibility with future updates to the Linux kernel. To achieve this, a new module parameter, `hystartpp`, has been defined, along with a few additional variables instead of reusing similar ones from HyStart. For example, rather than reusing HyStart\'92s `curr_rtt` to track the minimum RTT in the current round, we introduced `hspp_current_round_minrtt`. In this implementation, HyStart++ overrides HyStart, meaning it controls the slow-start phase whenever the `hystartpp` module parameter is set to a nonzero value, regardless of the `hystart` setting.
 
-The implementation includes `RFC9406_Lnnn` markers, where `nnn` is a three-digit number referencing the corresponding line in RFC 9406 [see here](./implementation/rfc9406.txt#L227).
+The implementation includes `RFC9406_Lnnn` markers, where `nnn` is a three-digit number referencing the corresponding line in RFC 9406. For example, {RFC9406_L227} points to a concept, instruction, or code located on line 227 of the RFC [see here](./implementation/rfc9406.txt#L227).
 
 To provide clarity, we included a [block diagram](./implementation/block_diagram.pdf) that introduces the new procedures and code added to `tcp_cubic.c` and illustrates their interactions.
 

@@ -97,6 +97,7 @@ MODULE_PARM_DESC(hystart_ack_delta_us, "spacing between ack's indicating train (
 static int hystartpp = 0;
 module_param(hystartpp, int, 0644);
 MODULE_PARM_DESC(hystartpp, "turn on/off hystart++ algorithm");
+// The following three lines are for monitoring purpose and will not be included in the final implementation.
 static int hystartpp_source_port = 80;
 module_param(hystartpp_source_port, int, 0644);
 MODULE_PARM_DESC(hystartpp_source_port, "Source port used for TCP data transfer");
@@ -134,25 +135,14 @@ struct bictcp {
 	u32	hspp_css_baseline_minrtt;
 	u32	hspp_end_seq;
 
-	u32	hspp_recent_rtt;	// Used for monitoring
-	u32	hspp_acked;		// Used for monitoring
-	u32     snd_isn;                // Used for monitoring. Initial sequence number (is used to calc delivered)
+	// The following three variables are used for monitoring and will not be included in the final implementation.
+	u32	hspp_recent_rtt;
+	u32	hspp_acked;
+	u32     snd_isn; // Initial sequence number (is used to calc delivered)
 };
 
-static inline void bictcp_reset(struct bictcp *ca)
+static void logprint(struct sock *sk, char *msg, int extra)	// This function is used for monitoring and will not be included in the final implementation.
 {
-	memset(ca, 0, offsetof(struct bictcp, unused));
-	ca->found = 0;
-}
-
-static inline u32 bictcp_clock_us(const struct sock *sk)
-{
-	return tcp_sk(sk)->tcp_mstamp;
-}
-
-static void logprint(struct sock *sk, char *msg, int extra)	// Used for monitoring
-{
-
 	if (ntohs(inet_sk(sk)->inet_sport) != hystartpp_source_port)
 		return;
 
@@ -168,6 +158,17 @@ static void logprint(struct sock *sk, char *msg, int extra)	// Used for monitori
 		  msg, bictcp_clock_us(sk), tp->snd_cwnd, tcp_packets_in_flight(tp), ca->hspp_flag, tp->snd_ssthresh, ca->hspp_rttsample_counter, ca->hspp_last_round_minrtt,
 		  ca->hspp_current_round_minrtt, ca->hspp_round_counter, ca->hspp_entered_css_at_round, ca->hspp_css_baseline_minrtt, ca->hspp_recent_rtt);
 	}
+}
+
+static inline void bictcp_reset(struct bictcp *ca)
+{
+	memset(ca, 0, offsetof(struct bictcp, unused));
+	ca->found = 0;
+}
+
+static inline u32 bictcp_clock_us(const struct sock *sk)
+{
+	return tcp_sk(sk)->tcp_mstamp;
 }
 
 static inline void bictcp_hystart_reset(struct sock *sk)
@@ -207,7 +208,7 @@ __bpf_kfunc static void cubictcp_init(struct sock *sk)
 		ca->hspp_current_round_minrtt = ~0U;	/* {RFC9406_L167} */
 		hystartpp_reset(sk);
 		logprint(sk, "INIT", 1);
-		return;	/* In this implimentation HSPP overrides HyStart */
+		return;
 	}
 
 	if (hystart)
@@ -447,7 +448,7 @@ __bpf_kfunc static void cubictcp_cong_avoid(struct sock *sk, u32 ack, u32 acked)
 	if (tcp_in_slow_start(tp)) {
 		if (hystartpp && (ca->hspp_flag != HSPP_DEACTIVE)) {	/* {RFC9406_L075} */
 			hystartpp_adjust_cwnd(sk, acked);
-			return;	/* In this implimentation HSPP overrides HyStart */
+			return;
 		}
 
 		acked = tcp_slow_start(tp, acked);
@@ -482,7 +483,7 @@ __bpf_kfunc static void cubictcp_state(struct sock *sk, u8 new_state)
 {
 	struct bictcp *ca = inet_csk_ca(sk);
 
-	if(ntohs(inet_sk(sk)->inet_sport) == hystartpp_source_port)	// Used for monitoring
+	if(ntohs(inet_sk(sk)->inet_sport) == hystartpp_source_port) // Used for monitoring
 		printk(KERN_INFO "~ State changed to %u t %u c %u i %u f %u ssthresh %u",
 		 new_state, bictcp_clock_us(sk), tcp_sk(sk)->snd_cwnd, tcp_packets_in_flight(tcp_sk(sk)), ca->hspp_flag, tcp_sk(sk)->snd_ssthresh);
 
@@ -490,7 +491,7 @@ __bpf_kfunc static void cubictcp_state(struct sock *sk, u8 new_state)
 	    ((new_state == TCP_CA_CWR) || (new_state == TCP_CA_Recovery) || (new_state == TCP_CA_Loss))) {	/* {RFC9406_L245} */
 		logprint(sk, "State Changed", 1);
 		ca->hspp_flag = HSPP_DEACTIVE;
-		return;	/* In this implimentation HSPP overrides HyStart */
+		return;
 	}
 
 	if (new_state == TCP_CA_Loss) {
@@ -653,13 +654,15 @@ __bpf_kfunc static void cubictcp_acked(struct sock *sk, const struct ack_sample 
 	if (ca->delay_min == 0 || ca->delay_min > delay)
 		ca->delay_min = delay;
 
-	if (!ca->found && tcp_in_slow_start(tp) && hystart && !hystartpp)	/* In this implimentation HSPP overrides HyStart */
-		hystart_update(sk, delay);
-
-	if (tcp_in_slow_start(tp) && /* {RFC9406_L075} */
-	    hystartpp && (ca->hspp_flag != HSPP_DEACTIVE)) {
-		hystartpp_adjust_params(sk, delay);
+	if (hystartpp) {
+		if (tcp_in_slow_start(tp) && (ca->hspp_flag != HSPP_DEACTIVE)) { /* {RFC9406_L075} */
+			hystartpp_adjust_params(sk, delay);
+		}
+		return;
 	}
+
+	if (!ca->found && tcp_in_slow_start(tp) && hystart)
+		hystart_update(sk, delay);
 }
 
 static struct tcp_congestion_ops cubictcp __read_mostly = {
