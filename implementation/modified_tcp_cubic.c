@@ -423,7 +423,7 @@ static void hystartpp_adjust_cwnd(struct sock *sk, u32 acked) {
 
 	if (ca->hspp_flag == HSPP_IN_SS) {
 		tcp_slow_start(tp, acked);
-	} else if (ca->hspp_flag == HSPP_IN_CSS) {			// We may not need the if statement
+	} else if (ca->hspp_flag == HSPP_IN_CSS) {
 		tcp_cong_avoid_ai(tp, HSPP_CSS_GROWTH_DIV, acked);	/* {RFC9406_L215} */
 	}
 

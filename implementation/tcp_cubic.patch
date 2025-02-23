@@ -1,5 +1,5 @@
 --- original_tcp_cubic.c	2025-02-10 12:17:14.000000000 +1300
-+++ modified_tcp_cubic.c	2025-02-24 10:22:27.000000000 +1300
++++ modified_tcp_cubic.c	2025-02-24 11:06:24.000000000 +1300
 @@ -46,6 +46,18 @@
  #define HYSTART_DELAY_MAX	(16000U)	/* 16 ms */
  #define HYSTART_DELAY_THRESH(x)	clamp(x, HYSTART_DELAY_MIN, HYSTART_DELAY_MAX)
@@ -142,7 +142,7 @@
 +
 +	if (ca->hspp_flag == HSPP_IN_SS) {
 +		tcp_slow_start(tp, acked);
-+	} else if (ca->hspp_flag == HSPP_IN_CSS) {			// We may not need the if statement
++	} else if (ca->hspp_flag == HSPP_IN_CSS) {
 +		tcp_cong_avoid_ai(tp, HSPP_CSS_GROWTH_DIV, acked);	/* {RFC9406_L215} */
 +	}
 +
