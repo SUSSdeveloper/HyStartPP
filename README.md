@@ -38,7 +38,7 @@ After enabling the desired algorithm, you can conduct network performance tests.
 By default, the source port used for TCP data transfer is <b>80</b>. If your test uses a different source port, you can set it using the following command:
 
 <pre>
-echo <port_number> > /sys/module/tcp_cubic/parameters/hystartpp_source_port
+echo <b>port_number</b> > /sys/module/tcp_cubic/parameters/hystartpp_source_port
 </pre>
 
 This setting enables logging of information in the `/var/log/kern.log` file on Linux.
